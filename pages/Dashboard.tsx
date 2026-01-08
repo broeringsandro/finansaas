@@ -55,17 +55,23 @@ export const Dashboard: React.FC = () => {
     return d.getMonth() + 1 === (new Date().getMonth() + 1) && d.getFullYear() === new Date().getFullYear();
   });
 
-  const totalIncome = currentMonthTx
+  const totalIncome = transactions
     .filter(t => t.type === 'receita' && t.status === 'pago')
     .reduce((acc, t) => acc + t.amount, 0);
 
-  const totalExpense = currentMonthTx
+  const totalExpense = transactions
     .filter(t => t.type === 'despesa' && t.status === 'pago')
+    .reduce((acc, t) => acc + t.amount, 0);
+
+  const netBalance = totalIncome - totalExpense;
+
+  const monthlyIncome = currentMonthTx
+    .filter(t => t.type === 'receita' && t.status === 'pago')
     .reduce((acc, t) => acc + t.amount, 0);
 
   const totalBalance = accounts.reduce((acc, a) => acc + a.balance, 0);
 
-  const goalProgress = goal ? Math.min((totalIncome / goal.revenueTarget) * 100, 100) : 0;
+  const goalProgress = goal ? Math.min((monthlyIncome / goal.revenueTarget) * 100, 100) : 0;
 
   const svgSize = 160;
   const center = svgSize / 2;
@@ -127,7 +133,7 @@ Seja direto, profissional mas encorajador. Use emojis para destacar pontos.`;
         model: 'gemini-1.5-flash',
         contents: prompt
       });
-      setAiInsight(response.text() ?? null);
+      setAiInsight(response.text ?? null);
     } catch (err) {
       console.error("Gemini API Error:", err);
       // Fallback for API errors
@@ -182,9 +188,9 @@ Seja direto, profissional mas encorajador. Use emojis para destacar pontos.`;
 
       {/* KPI Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <StatCard title="Receitas Pagas" value={totalIncome} icon={<TrendingUp size={24} />} color="#10b981" trend="+12%" onClick={() => navigate('/movimentacoes')} />
-        <StatCard title="Despesas Pagas" value={totalExpense} icon={<TrendingDown size={24} />} color="#ef4444" onClick={() => navigate('/movimentacoes')} />
-        <StatCard title="Saldo Atual" value={totalBalance} icon={<Wallet size={24} />} color="#3b82f6" onClick={() => navigate('/contas')} />
+        <StatCard title="Recebido" value={totalIncome} icon={<TrendingUp size={24} />} color="#10b981" onClick={() => navigate('/movimentacoes')} />
+        <StatCard title="Despesas" value={totalExpense} icon={<TrendingDown size={24} />} color="#ef4444" onClick={() => navigate('/movimentacoes')} />
+        <StatCard title="Saldo Atual" value={netBalance} icon={<Wallet size={24} color={netBalance >= 0 ? "#10b981" : "#ef4444"} />} color={netBalance >= 0 ? "#10b981" : "#ef4444"} onClick={() => navigate('/contas')} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -229,7 +235,7 @@ Seja direto, profissional mas encorajador. Use emojis para destacar pontos.`;
           <div className="mt-8 pt-8 border-t border-zinc-50 space-y-4">
             <div className="flex justify-between items-center text-sm">
               <span className="text-zinc-400 font-bold uppercase tracking-widest text-[10px]">Realizado</span>
-              <span className="font-bold text-zinc-900">{formatCurrency(totalIncome)}
+              <span className="font-bold text-zinc-900">{formatCurrency(monthlyIncome)}
               </span>
             </div>
             <div className="flex justify-between items-center text-sm">

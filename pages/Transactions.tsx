@@ -312,6 +312,13 @@ export const Transactions: React.FC = () => {
               {categories.map(c => <option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}
             </select>
           </div>
+          <div className="col-span-2">
+            <label className="block text-xs font-bold text-zinc-500 uppercase mb-1.5">Cliente (Opcional)</label>
+            <select value={formData.clientId || ''} onChange={e => setFormData({ ...formData, clientId: e.target.value })} className="w-full px-4 py-3 bg-zinc-50 border border-zinc-100 rounded-xl">
+              <option value="">Nenhum</option>
+              {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+          </div>
         </div>
       </FormModal>
 

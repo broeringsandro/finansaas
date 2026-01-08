@@ -137,9 +137,61 @@ export const db = {
     if (error) console.error("Error saving account:", error);
   },
 
+  async updateAccountBalance(accountId: string) {
+    if (!accountId) return;
+
+    // Get all paid transactions for this account
+    const { data: txs, error: txError } = await supabase
+      .from('transactions')
+      .select('amount, type')
+      .eq('account_id', accountId)
+      .eq('status', 'pago');
+
+    if (txError) {
+      console.error("Error fetching transactions for balance update:", txError);
+      return;
+    }
+
+    // Get initial balance
+    const { data: account, error: accError } = await supabase
+      .from('accounts')
+      .select('initial_balance')
+      .eq('id', accountId)
+      .single();
+
+    if (accError) {
+      console.error("Error fetching account for balance update:", accError);
+      return;
+    }
+
+    const totalIncome = (txs || [])
+      .filter(t => t.type === 'receita')
+      .reduce((acc, t) => acc + t.amount, 0);
+
+    const totalExpense = (txs || [])
+      .filter(t => t.type === 'despesa')
+      .reduce((acc, t) => acc + t.amount, 0);
+
+    const newBalance = (account.initial_balance || 0) + totalIncome - totalExpense;
+
+    const { error: updateError } = await supabase
+      .from('accounts')
+      .update({ balance: newBalance })
+      .eq('id', accountId);
+
+    if (updateError) console.error("Error updating account balance:", updateError);
+  },
+
   async saveTransaction(tx: Transaction) {
     const user = await this.getUser();
     if (!user) return;
+
+    // Get old transaction to handle account changes
+    const { data: oldTx } = await supabase
+      .from('transactions')
+      .select('account_id')
+      .eq('id', tx.id)
+      .single();
 
     const { error } = await supabase.from('transactions').upsert({
       id: tx.id,
@@ -156,7 +208,18 @@ export const db = {
       created_at: tx.createdAt
     });
 
-    if (error) console.error("Error saving transaction:", error);
+    if (error) {
+      console.error("Error saving transaction:", error);
+    } else {
+      // Update balance for the new account
+      if (tx.accountId) {
+        await this.updateAccountBalance(tx.accountId);
+      }
+      // If account changed, update the old account's balance too
+      if (oldTx && oldTx.account_id && oldTx.account_id !== tx.accountId) {
+        await this.updateAccountBalance(oldTx.account_id);
+      }
+    }
   },
 
   async deleteAccount(id: string) {
@@ -165,8 +228,20 @@ export const db = {
   },
 
   async deleteTransaction(id: string) {
+    // Get account_id before deleting
+    const { data: tx } = await supabase
+      .from('transactions')
+      .select('account_id')
+      .eq('id', id)
+      .single();
+
     const { error } = await supabase.from('transactions').delete().eq('id', id);
-    if (error) console.error("Error deleting transaction:", error);
+
+    if (error) {
+      console.error("Error deleting transaction:", error);
+    } else if (tx && tx.account_id) {
+      await this.updateAccountBalance(tx.account_id);
+    }
   },
 
   async saveClient(client: Client) {
