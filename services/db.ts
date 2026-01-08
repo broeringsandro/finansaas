@@ -201,10 +201,10 @@ export const db = {
       type: tx.type,
       status: tx.status,
       date: tx.date,
-      account_id: tx.accountId,
-      card_id: tx.cardId,
-      category_id: tx.categoryId,
-      client_id: tx.clientId,
+      account_id: tx.accountId || null,
+      card_id: tx.cardId || null,
+      category_id: tx.categoryId || null,
+      client_id: tx.clientId || null,
       created_at: tx.createdAt
     });
 
