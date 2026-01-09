@@ -11,6 +11,7 @@ import { AccountDetail } from './pages/AccountDetail';
 import { Clients } from './pages/Clients';
 import { Goals } from './pages/Goals';
 import { Reports } from './pages/Reports';
+import { Bills } from './pages/Bills';
 import { Settings } from './pages/Settings';
 import { Login } from './pages/Login';
 import { supabase } from './lib/supabase';
@@ -71,6 +72,7 @@ const App: React.FC = () => {
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/movimentacoes" element={<Transactions />} />
+          <Route path="/contas-pendentes" element={<Bills />} />
           <Route path="/contas" element={<AccountsCards />} />
           <Route path="/contas/:id" element={<AccountDetail />} />
           <Route path="/categorias" element={<Categories />} />

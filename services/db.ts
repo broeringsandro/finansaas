@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase';
-import { Transaction, Account, Card, Category, Client, Goal, User, AppSettings } from '../types';
+import { Transaction, Account, Card, Category, Client, Goal, User, AppSettings, Bill } from '../types';
 
 export const db = {
   // Helpers
@@ -100,6 +100,20 @@ export const db = {
       cardId: t.card_id,
       categoryId: t.category_id,
       clientId: t.client_id
+    }));
+  },
+
+  async getBills(): Promise<Bill[]> {
+    const { data } = await supabase.from('bills').select('*').order('due_date', { ascending: true });
+    return (data || []).map(b => ({
+      ...b,
+      userId: b.user_id,
+      dueDate: b.due_date,
+      accountId: b.account_id,
+      cardId: b.card_id,
+      categoryId: b.category_id,
+      clientId: b.client_id,
+      transactionId: b.transaction_id
     }));
   },
 
@@ -219,6 +233,75 @@ export const db = {
       if (oldTx && oldTx.account_id && oldTx.account_id !== tx.accountId) {
         await this.updateAccountBalance(oldTx.account_id);
       }
+    }
+  },
+
+  async saveBill(bill: Bill) {
+    const user = await this.getUser();
+    if (!user) return;
+
+    const { error } = await supabase.from('bills').upsert({
+      id: bill.id,
+      user_id: user.id,
+      type: bill.type,
+      description: bill.description,
+      amount: bill.amount,
+      due_date: bill.dueDate,
+      status: bill.status,
+      account_id: bill.accountId || null,
+      card_id: bill.cardId || null,
+      category_id: bill.categoryId || null,
+      client_id: bill.clientId || null,
+      notes: bill.notes || null,
+      transaction_id: bill.transactionId || null,
+      created_at: bill.createdAt
+    });
+
+    if (error) console.error("Error saving bill:", error);
+  },
+
+  async deleteBill(id: string) {
+    const { error } = await supabase.from('bills').delete().eq('id', id);
+    if (error) console.error("Error deleting bill:", error);
+  },
+
+  async markBillAsPaid(bill: Bill) {
+    const user = await this.getUser();
+    if (!user) return;
+
+    const txId = crypto.randomUUID();
+    const status = bill.type === 'receber' ? 'recebido' : 'pago';
+    const txType = bill.type === 'receber' ? 'receita' : 'despesa';
+
+    // 1. Create Transaction
+    const tx: Transaction = {
+      id: txId,
+      userId: user.id,
+      description: bill.description,
+      amount: bill.amount,
+      type: txType,
+      status: 'pago',
+      date: new Date().toISOString(),
+      accountId: bill.accountId,
+      cardId: bill.cardId,
+      categoryId: bill.categoryId,
+      clientId: bill.clientId,
+      createdAt: new Date().toISOString()
+    };
+
+    await this.saveTransaction(tx);
+
+    // 2. Update Bill
+    const { error: billError } = await supabase
+      .from('bills')
+      .update({
+        status: status,
+        transaction_id: txId
+      })
+      .eq('id', bill.id);
+
+    if (billError) {
+      console.error("Error updating bill after payment:", billError);
     }
   },
 

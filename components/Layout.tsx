@@ -12,7 +12,8 @@ import {
   Menu,
   X,
   LogOut,
-  ChevronRight
+  ChevronRight,
+  Calendar
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { db } from '../services/db';
@@ -32,6 +33,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   const menuItems = [
     { to: '/', label: 'Dashboard', icon: <LayoutDashboard size={20} /> },
     { to: '/movimentacoes', label: 'Movimentações', icon: <ArrowLeftRight size={20} /> },
+    { to: '/contas-pendentes', label: 'A Receber / Pagar', icon: <Calendar size={20} /> },
     { to: '/contas', label: 'Contas & Cartões', icon: <CreditCard size={20} /> },
     { to: '/categorias', label: 'Categorias', icon: <Tags size={20} /> },
     { to: '/relatorios', label: 'Relatórios', icon: <PieChart size={20} /> },

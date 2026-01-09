@@ -70,6 +70,23 @@ export interface Transaction {
   createdAt: string;
 }
 
+export interface Bill {
+  id: string;
+  userId: string;
+  type: 'receber' | 'pagar';
+  description: string;
+  amount: number;
+  dueDate: string;
+  status: 'pendente' | 'pago' | 'recebido' | 'atrasado';
+  accountId?: string;
+  cardId?: string;
+  categoryId?: string;
+  clientId?: string;
+  notes?: string;
+  transactionId?: string;
+  createdAt: string;
+}
+
 export interface Goal {
   id: string;
   userId: string;
