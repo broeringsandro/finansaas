@@ -1,0 +1,36 @@
+@import "tailwindcss";
+
+@theme {
+  --font-inter: "Inter", sans-serif;
+}
+
+@layer base {
+  body {
+    @apply font-sans antialiased bg-zinc-50 text-zinc-900;
+  }
+}
+
+.label { 
+    display: block; 
+    font-size: 10px; 
+    font-weight: bold; 
+    color: #71717a; 
+    text-transform: uppercase; 
+    margin-bottom: 6px; 
+    letter-spacing: 0.1em; 
+}
+
+.input { 
+    width: 100%; 
+    padding: 14px 18px; 
+    background: #f9fafb; 
+    border: 1px solid #f4f4f5; 
+    border-radius: 16px; 
+    font-weight: 700; 
+    font-size: 15px; 
+}
+
+.input:focus { 
+    outline: none; 
+    border-color: #18181b; 
+}
